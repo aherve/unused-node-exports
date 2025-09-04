@@ -33,11 +33,15 @@ func main() {
 	log.Println("building imports map")
 	imports := buildImports(worktree)
 
+	unusedCount := 0
 	for _, export := range exports {
 		if _, found := imports[export.FuncName]; !found {
+			unusedCount++
 			log.Printf("exported function %s in file %s is not imported anywhere\n", export.FuncName, export.FileName)
 		}
 	}
+
+	log.Printf("found %d unused exported types or functions\n", unusedCount)
 
 }
 
