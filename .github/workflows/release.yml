@@ -1,0 +1,39 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # triggers on semantic version tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'  # update if needed
+
+      - name: Build binary
+        run: |
+          mkdir -p release
+          ext=""
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            ext=".exe"
+          fi
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o release/unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}${ext} ./...
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
