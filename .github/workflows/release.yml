@@ -1,12 +1,12 @@
 name: Build and Release
 
-permissions:
-  contents: write
-
 on:
   push:
     tags:
-      - 'v*.*.*'  # triggers on semantic version tags like v1.0.0
+      - 'v*.*.*'  # triggers on version tags like v1.0.0
+
+permissions:
+  contents: write  # required for creating GitHub releases
 
 jobs:
   build:
@@ -22,21 +22,40 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'  # update if needed
+          go-version: '1.24'  # adjust if needed
 
       - name: Build binary
         run: |
-          mkdir -p release
+          mkdir -p dist
           ext=""
           if [ "${{ matrix.goos }}" = "windows" ]; then
             ext=".exe"
           fi
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o release/unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}${ext} ./...
+          binary="yourtool-${{ matrix.goos }}-${{ matrix.goarch }}${ext}"
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o "dist/$binary" ./...
+
+      - name: Compress binaries
+        run: |
+          cd dist
+          for file in *; do
+            if [[ "$file" == *.exe ]]; then
+              zip "${file%.exe}.zip" "$file"
+              rm "$file"
+            else
+              tar -czf "$file.tar.gz" "$file"
+              rm "$file"
+            fi
+          done
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
         with:
-          files: release/*
+          files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
