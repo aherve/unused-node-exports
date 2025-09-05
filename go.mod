@@ -2,7 +2,10 @@ module github.com/aherve/unused-node-exports/v2
 
 go 1.24.2
 
-require github.com/go-git/go-git/v5 v5.16.2
+require (
+	github.com/go-git/go-git/v5 v5.16.2
+	github.com/urfave/cli/v3 v3.4.1
+)
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

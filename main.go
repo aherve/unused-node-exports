@@ -1,136 +1,83 @@
 package main
 
 import (
-	"io"
+	"context"
 	"log"
 	"os"
-	"regexp"
-	"strings"
 
-	"github.com/go-git/go-git/v5"
+	"github.com/aherve/unused-node-exports/v2/unusedexports"
+	"github.com/urfave/cli/v3"
 )
-
-type Export struct {
-	FuncName string
-	FileName string
-}
 
 func main() {
 
-	repo, err := git.PlainOpen("~/Bobsled/bobsled")
-	if err != nil {
-		log.Fatal(err)
-	}
+	cmd := &cli.Command{
+		Name:  "unused-node-exports",
+		Usage: "find unused exports in a nodejs/typescript project",
+		Commands: []*cli.Command{
+			{
+				Name:  "scan",
+				Usage: "scan git directory find unused exports",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "path",
+						Aliases: []string{"p"},
+						Usage:   "Path to the git repository to scan. Defaults to the current directory.",
+						Value:   ".",
+					},
+					&cli.StringSliceFlag{
+						Name:    "file-extensions",
+						Aliases: []string{"e"},
+						Usage:   "List of file extensions to consider. If provided, only files with these extensions will be scanned.",
+						Value:   []string{".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"},
+					},
+					&cli.StringFlag{
+						Name:    "output",
+						Aliases: []string{"o"},
+						Usage:   "If provided, the results will be written to this file in CSV format",
+						Value:   "",
+					},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					log.Printf("scanning path %s with extensions %+v", cmd.String("path"), cmd.StringSlice("file-extensions"))
+					res, err := unusedexports.FindUnusedExports(cmd.String("path"), cmd.StringSlice("file-extensions"))
+					if err != nil {
+						log.Panic(err)
+					}
+					log.Printf("found %d unused exports amongst %d imports and %d exports", len(res.UnusedExports), res.NumberOfImports, res.NumberOfExports)
 
-	worktree, err := repo.Worktree()
-	if err != nil {
-		log.Fatal(err)
-	}
+					if outFile := cmd.String("output"); outFile != "" {
+						return CSVExport(res.UnusedExports, outFile)
+					}
 
-	log.Println("building exports map")
-	exports := buildExports(worktree)
+					for _, exp := range res.UnusedExports {
+						log.Printf("found unused export: %s in file %s", exp.FuncName, exp.FileName)
+					}
 
-	log.Println("building imports map")
-	imports := buildImports(worktree)
-
-	unusedCount := 0
-	for _, export := range exports {
-		if _, found := imports[export.FuncName]; !found {
-			unusedCount++
-			log.Printf("exported function %s in file %s is not imported anywhere\n", export.FuncName, export.FileName)
-		}
-	}
-
-	log.Printf("found %d unused exported types or functions\n", unusedCount)
-
-}
-
-func buildImports(workTree *git.Worktree) map[string]struct{} {
-
-	allFiles := []string{}
-	allImportFiles, err := workTree.Grep(&git.GrepOptions{
-		Patterns: []*regexp.Regexp{
-			regexp.MustCompile("import {"),
+					return nil
+				},
+			},
 		},
-	})
-	if err != nil {
+	}
+
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
 	}
 
-	for _, result := range allImportFiles {
-		if strings.HasSuffix(result.FileName, ".ts") {
-			allFiles = append(allFiles, "/Users/aherve/Bobsled/bobsled/"+result.FileName)
-		}
-	}
-
-	importsMap := make(map[string]struct{})
-	for _, file := range allFiles {
-		imports := findImportsInFile(file)
-		for _, imp := range imports {
-			importsMap[imp] = struct{}{}
-		}
-	}
-
-	log.Printf("found %d unique imports across %d files\n", len(importsMap), len(allFiles))
-
-	return importsMap
 }
 
-func findImportsInFile(filePath string) []string {
-	// Open the file
-	file, err := os.Open(filePath)
+func CSVExport(exports []unusedexports.Export, filename string) error {
+	file, err := os.Create(filename)
 	if err != nil {
-		log.Fatalf("failed to open file: %s", err)
+		return err
 	}
 	defer file.Close()
 
-	// Read the file content
-	content, err := io.ReadAll(file)
-	if err != nil {
-		log.Fatalf("failed to read file: %s", err)
-	}
-
-	// find imports
-	re := regexp.MustCompile(`import (?:type )?\{\s*([\s\S]*?)\s*\}`)
-
-	// Find all matches
-	matches := re.FindAllStringSubmatch(string(content), -1)
-
-	res := []string{}
-
-	for _, match := range matches {
-		names := strings.SplitSeq(match[1], ",")
-		for name := range names {
-			trimmed := strings.TrimSpace(name)
-			if trimmed != "" {
-				res = append(res, trimmed)
-			}
+	file.WriteString("name,file\n")
+	for _, entry := range exports {
+		if _, err := file.WriteString(entry.FuncName + "," + entry.FileName + "\n"); err != nil {
+			return err
 		}
 	}
-
-	return res
-}
-
-func buildExports(workTree *git.Worktree) []Export {
-
-	results, err := workTree.Grep(&git.GrepOptions{
-		Patterns: []*regexp.Regexp{
-			regexp.MustCompile("export (async )?function"),
-		},
-	})
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res := []Export{}
-
-	for _, result := range results {
-		funcName := regexp.MustCompile(`export (async )?function (\w+)`).FindStringSubmatch(result.Content)
-		if len(funcName) > 1 {
-			res = append(res, Export{FuncName: funcName[2], FileName: result.FileName})
-		}
-	}
-	log.Printf("found %d exported functions\n", len(res))
-	return res
+	return nil
 }
