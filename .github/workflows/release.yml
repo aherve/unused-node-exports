@@ -32,7 +32,7 @@ jobs:
             ext=".exe"
           fi
           binary="unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}${ext}"
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o "dist/$binary" ./...
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o "dist/$binary" .
 
       - name: Compress binaries
         run: |
