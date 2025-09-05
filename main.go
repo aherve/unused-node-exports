@@ -42,7 +42,7 @@ func main() {
 					log.Printf("scanning path %s with extensions %+v", cmd.String("path"), cmd.StringSlice("file-extensions"))
 					res, err := unusedexports.FindUnusedExports(cmd.String("path"), cmd.StringSlice("file-extensions"))
 					if err != nil {
-						log.Panic(err)
+						return err
 					}
 					log.Printf("found %d unused exports amongst %d imports and %d exports", len(res.UnusedExports), res.NumberOfImports, res.NumberOfExports)
 
