@@ -35,6 +35,10 @@ Example:
 unused-node-exports scan -p ./my-project -e .ts,.tsx -o unused.csv
 ```
 
+## Example Output
+
+![Example Output](assets/demo.png)
+
 ## Performance and Limitations
 
 This tool prioritizes speed over perfection. It uses regular expressions to find exports and imports in all git tracked files, but does not use a full parser or AST analysis. As a result, it may not catch all edge cases, such as dynamic imports or exports, or certain complex import/export patterns.
