@@ -46,15 +46,12 @@ func FindUnusedExports(worktreePath string, fileSuffixFilter []string) (*UnusedE
 		return nil, fmt.Errorf("could not build imports map: %w", err)
 	}
 
-	unusedCount := 0
 	unusedExports := []Export{}
 	for _, export := range exports {
 		if _, found := imports[export.FuncName]; !found {
 			unusedExports = append(unusedExports, export)
 		}
 	}
-
-	log.Printf("found %d unused exported types or functions\n", unusedCount)
 
 	return &UnusedExportResult{
 		UnusedExports:   unusedExports,

@@ -44,7 +44,6 @@ func main() {
 					if err != nil {
 						return err
 					}
-					log.Printf("found %d unused exports amongst %d imports and %d exports", len(res.UnusedExports), res.NumberOfImports, res.NumberOfExports)
 
 					if outFile := cmd.String("output"); outFile != "" {
 						return CSVExport(res.UnusedExports, outFile)
@@ -54,6 +53,7 @@ func main() {
 						log.Printf("found unused export: %s in file %s", exp.FuncName, exp.FileName)
 					}
 
+					log.Printf("found %d unused exports amongst %d imports and %d exports", len(res.UnusedExports), res.NumberOfImports, res.NumberOfExports)
 					return nil
 				},
 			},
