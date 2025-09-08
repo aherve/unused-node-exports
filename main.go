@@ -50,7 +50,7 @@ func main() {
 					}
 
 					for _, exp := range res.UnusedExports {
-						log.Printf("found unused export: %s in file %s", exp.FuncName, exp.FileName)
+						log.Printf("%s\t%s", exp.FileName, exp.ExportName)
 					}
 
 					log.Printf("found %d unused exports amongst %d imports and %d exports", len(res.UnusedExports), res.NumberOfImports, res.NumberOfExports)
@@ -73,9 +73,9 @@ func CSVExport(exports []unusedexports.Export, filename string) error {
 	}
 	defer file.Close()
 
-	file.WriteString("name,file\n")
+	file.WriteString("file,exportName\n")
 	for _, entry := range exports {
-		if _, err := file.WriteString(entry.FuncName + "," + entry.FileName + "\n"); err != nil {
+		if _, err := file.WriteString(entry.FileName + "," + entry.ExportName + "\n"); err != nil {
 			return err
 		}
 	}

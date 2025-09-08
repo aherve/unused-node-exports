@@ -6,14 +6,15 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
 )
 
 type Export struct {
-	FuncName string
-	FileName string
+	ExportName string
+	FileName   string
 }
 
 type UnusedExportResult struct {
@@ -48,10 +49,18 @@ func FindUnusedExports(worktreePath string, fileSuffixFilter []string) (*UnusedE
 
 	unusedExports := []Export{}
 	for _, export := range exports {
-		if _, found := imports[export.FuncName]; !found {
+		if _, found := imports[export.ExportName]; !found {
 			unusedExports = append(unusedExports, export)
 		}
 	}
+
+	// Sort unusedExports by Filename, then ExportName
+	sort.Slice(unusedExports, func(i, j int) bool {
+		if unusedExports[i].FileName == unusedExports[j].FileName {
+			return unusedExports[i].ExportName < unusedExports[j].ExportName
+		}
+		return unusedExports[i].FileName < unusedExports[j].FileName
+	})
 
 	return &UnusedExportResult{
 		UnusedExports:   unusedExports,
@@ -134,12 +143,15 @@ func findImportsInFile(filePath string) ([]string, error) {
 	return res, nil
 }
 
+const hasExportRegexPattern = `export (?:async )?(?:function|const)`
+const exportNameRegexPattern = `export (?:async )?(?:function|const) (\w+)`
+
 func buildExports(workTree *git.Worktree, fileSuffixFilter []string) ([]Export, error) {
 	res := []Export{}
 
 	results, err := workTree.Grep(&git.GrepOptions{
 		Patterns: []*regexp.Regexp{
-			regexp.MustCompile("export (async )?function"),
+			regexp.MustCompile(hasExportRegexPattern),
 		},
 	})
 
@@ -152,9 +164,9 @@ func buildExports(workTree *git.Worktree, fileSuffixFilter []string) ([]Export, 
 			if !strings.HasSuffix(result.FileName, suffix) {
 				continue
 			}
-			funcName := regexp.MustCompile(`export (async )?function (\w+)`).FindStringSubmatch(result.Content)
-			if len(funcName) > 1 {
-				res = append(res, Export{FuncName: funcName[2], FileName: result.FileName})
+			funcName := regexp.MustCompile(exportNameRegexPattern).FindStringSubmatch(result.Content)
+			if len(funcName) > 0 {
+				res = append(res, Export{ExportName: funcName[1], FileName: result.FileName})
 			}
 			break
 		}
