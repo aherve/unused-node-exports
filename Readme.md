@@ -39,6 +39,14 @@ unused-node-exports scan -p ./my-project -e .ts,.tsx -o unused.csv
 
 ![Example Output](assets/demo.png)
 
-## Performance and Limitations
+## How it works
 
-This tool prioritizes speed over perfection. It uses regular expressions to find exports and imports in all git tracked files, but does not use a full parser or AST analysis. As a result, it may not catch all edge cases, such as dynamic imports or exports, or certain complex import/export patterns.
+1. Using `git grep`, find all files that contain `export [async] [function|const]` statements and extract the exported names.
+2. Using `git grep`, find all files that contain `import` statements, and extract the imported names.
+3. Compare the two sets and identify exported names that are not imported anywhere else in the code
+
+This process is extremely fast and works on large codebases that export sub-modules such as turbo-repo or monorepo. However, it may not catch all edge cases. Performances are prioritized over perfection.
+
+## Why not using existing npm packages?
+
+I created this tool to work on a large codebase where the existing npm tools I tried quickly run out of memory.
