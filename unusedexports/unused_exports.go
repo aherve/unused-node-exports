@@ -23,7 +23,7 @@ type UnusedExportResult struct {
 	NumberOfExports int
 }
 
-func FindUnusedExports(worktreePath string, fileSuffixFilter []string) (*UnusedExportResult, error) {
+func FindUnusedExports(worktreePath string, fileSuffixFilter []string, exportPrefix string) (*UnusedExportResult, error) {
 
 	repo, err := git.PlainOpen(worktreePath)
 	if err != nil {
@@ -36,7 +36,7 @@ func FindUnusedExports(worktreePath string, fileSuffixFilter []string) (*UnusedE
 	}
 
 	log.Println("building exports map")
-	exports, err := buildExports(worktree, fileSuffixFilter)
+	exports, err := buildExports(worktree, fileSuffixFilter, exportPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("could not build exports map: %w", err)
 	}
@@ -146,13 +146,20 @@ func findImportsInFile(filePath string) ([]string, error) {
 const hasExportRegexPattern = `export (?:async )?(?:function|const)`
 const exportNameRegexPattern = `export (?:async )?(?:function|const) (\w+)`
 
-func buildExports(workTree *git.Worktree, fileSuffixFilter []string) ([]Export, error) {
+func buildExports(workTree *git.Worktree, fileSuffixFilter []string, exportPrefix string) ([]Export, error) {
 	res := []Export{}
+
+	escapedPrefix := regexp.QuoteMeta(exportPrefix)
+	prefixPathRegex, err := regexp.Compile("^" + escapedPrefix)
+	if err != nil {
+		return res, fmt.Errorf("could not compile export prefix regex: %w", err)
+	}
 
 	results, err := workTree.Grep(&git.GrepOptions{
 		Patterns: []*regexp.Regexp{
 			regexp.MustCompile(hasExportRegexPattern),
 		},
+		PathSpecs: []*regexp.Regexp{prefixPathRegex},
 	})
 
 	if err != nil {

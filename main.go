@@ -55,10 +55,16 @@ func main() {
 						Usage:   "If provided, the results will be written to this file in CSV format",
 						Value:   "",
 					},
+					&cli.StringFlag{
+						Name:    "export-prefix",
+						Aliases: []string{"p", "prefix"},
+						Usage:   "If provided, only exports starting with this prefix will be considered. This is useful to find unused exports in a specific namespace.",
+						Value:   "",
+					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					log.Printf("scanning path %s with extensions %+v", pathArg, cmd.StringSlice("file-extensions"))
-					res, err := unusedexports.FindUnusedExports(pathArg, cmd.StringSlice("file-extensions"))
+					res, err := unusedexports.FindUnusedExports(pathArg, cmd.StringSlice("file-extensions"), cmd.String("export-prefix"))
 					if err != nil {
 						return err
 					}
