@@ -77,3 +77,31 @@ func TestExportRegexes(t *testing.T) {
 
 	}
 }
+
+func TestFindImportsInContent(t *testing.T) {
+	input := `
+	import { A, B,
+C } from 'module1';
+	import { D } from 'module2';
+	import type { E
+	,
+	F } from 'module3';
+	import { G as aliasG,    H  } from 'module4';
+	
+	import type { I as aliasI, J } from 'module5';
+	`
+
+	found, err := findImportsInContent([]byte(input))
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	expected := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"}
+	if len(found) != len(expected) {
+		t.Errorf("expected %d imports, got %d", len(expected), len(found))
+	}
+	for i, exp := range expected {
+		if found[i] != exp {
+			t.Errorf("expected import %s, got %s", exp, found[i])
+		}
+	}
+}

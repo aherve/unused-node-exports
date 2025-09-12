@@ -118,9 +118,14 @@ func findImportsInFile(filePath string) ([]string, error) {
 	if err != nil {
 		return res, fmt.Errorf("failed to read file: %s", err)
 	}
+	return findImportsInContent(content)
+}
+
+func findImportsInContent(content []byte) ([]string, error) {
+	res := []string{}
 
 	// find imports
-	re := regexp.MustCompile(`import (?:type )?\{\s*([\s\S]*?)\s*\}`)
+	re := regexp.MustCompile(importRegexPattern)
 
 	// Find all matches
 	matches := re.FindAllStringSubmatch(string(content), -1)
@@ -129,12 +134,12 @@ func findImportsInFile(filePath string) ([]string, error) {
 		names := strings.SplitSeq(match[1], ",")
 		for name := range names {
 			trimmed := strings.TrimSpace(name)
+			trimmed = regexp.MustCompile(removeAliasRegexPattern).ReplaceAllString(trimmed, "$1")
 			if trimmed != "" {
 				res = append(res, trimmed)
 			}
 		}
 	}
-
 	return res, nil
 }
 

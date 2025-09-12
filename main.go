@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const version = "v3.1.0"
+const version = "v3.1.1"
 
 func showVersion() {
 	fmt.Println(version)
