@@ -16,18 +16,22 @@ Precompiled binaries are available on the [releases page](https://github.com/ahe
 
 ## Usage
 
-Scan your current git repository for unused exports.
-
 See all available options with:
 
 ```
 unused-node-exports --help
 ```
 
-Example usage:
+### Scan your current git repository for unused exports.
 
 ```
-unused-node-exports scan ./my-project -e .ts,.tsx -o unused.csv
+unused-node-exports scan ./my-project -e .ts,.tsx -p my/lib/ -o unused.csv
+```
+
+### Autofix unused exports:
+
+```
+unused-node-exports scan . -p my-folder --autofix
 ```
 
 ## Example Output

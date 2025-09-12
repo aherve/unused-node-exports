@@ -138,9 +138,6 @@ func findImportsInFile(filePath string) ([]string, error) {
 	return res, nil
 }
 
-const hasExportRegexPattern = `export (?:async )?(?:function|const)`
-const exportNameRegexPattern = `export (?:async )?(?:function|const) (\w+)`
-
 func buildExports(workTree *git.Worktree, fileSuffixFilter []string, exportPrefix string) ([]Export, error) {
 	res := []Export{}
 

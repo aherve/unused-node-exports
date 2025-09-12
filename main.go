@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const version = "v3.0.0"
+const version = "v3.1.0"
 
 func showVersion() {
 	fmt.Println(version)
@@ -78,7 +78,7 @@ func main() {
 					autofix := cmd.Bool("autofix")
 
 					if autofix {
-						return unusedexports.Autofix(res.UnusedExports)
+						return unusedexports.Autofix(pathArg, res.UnusedExports)
 					}
 
 					if outFile := cmd.String("output"); outFile != "" {
