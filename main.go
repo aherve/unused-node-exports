@@ -10,13 +10,15 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const version = "v2.0.0"
+const version = "v3.0.0"
 
 func showVersion() {
 	fmt.Println(version)
 }
 
 func main() {
+
+	pathArg := "."
 
 	cmd := &cli.Command{
 		Name:  "unused-node-exports",
@@ -33,13 +35,14 @@ func main() {
 			{
 				Name:  "scan",
 				Usage: "scan git directory find unused exports",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:    "path",
-						Aliases: []string{"p"},
-						Usage:   "Path to the git repository to scan. Defaults to the current directory.",
-						Value:   ".",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:        "path",
+						Value:       ".",
+						Destination: &pathArg,
 					},
+				},
+				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name:    "file-extensions",
 						Aliases: []string{"e"},
@@ -54,8 +57,8 @@ func main() {
 					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					log.Printf("scanning path %s with extensions %+v", cmd.String("path"), cmd.StringSlice("file-extensions"))
-					res, err := unusedexports.FindUnusedExports(cmd.String("path"), cmd.StringSlice("file-extensions"))
+					log.Printf("scanning path %s with extensions %+v", pathArg, cmd.StringSlice("file-extensions"))
+					res, err := unusedexports.FindUnusedExports(pathArg, cmd.StringSlice("file-extensions"))
 					if err != nil {
 						return err
 					}
