@@ -16,23 +16,18 @@ Precompiled binaries are available on the [releases page](https://github.com/ahe
 
 ## Usage
 
-Scan your current git repository for unused exports:
+Scan your current git repository for unused exports.
+
+See all available options with:
 
 ```
-unused-node-exports scan
+unused-node-exports --help
 ```
 
-Options:
-
-- `--help, -h`: Show help message.
-- `--path, -p`: Path to the git repository to scan (default: current directory).
-- `--file-extensions, -e`: Comma-separated list of file extensions to scan (default: .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts).
-- `--output, -o`: Output results to a CSV file.
-
-Example:
+Example usage:
 
 ```
-unused-node-exports scan -p ./my-project -e .ts,.tsx -o unused.csv
+unused-node-exports scan ./my-project -e .ts,.tsx -o unused.csv
 ```
 
 ## Example Output
