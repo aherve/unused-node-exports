@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/aherve/unused-node-exports/v2/unusedexports"
+	"github.com/aherve/unused-node-exports/v3/unusedexports"
 	"github.com/urfave/cli/v3"
 )
 

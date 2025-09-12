@@ -1,4 +1,4 @@
-module github.com/aherve/unused-node-exports/v2
+module github.com/aherve/unused-node-exports/v3
 
 go 1.24.2
 

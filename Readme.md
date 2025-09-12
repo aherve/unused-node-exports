@@ -7,7 +7,7 @@ A fast CLI tool to find unused exports in Node.js and TypeScript projects. It sc
 ### Using go:
 
 ```
-go install github.com/aherve/unused-node-exports/v2@latest
+go install github.com/aherve/unused-node-exports/v3@latest
 ```
 
 ### Downloading the binary:
