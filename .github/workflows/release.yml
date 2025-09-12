@@ -13,7 +13,8 @@ jobs:
   build:
     if: >
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch =~ '^v[0-9]+\.[0-9]+\.[0-9]+$' &&
+      startsWith(github.event.workflow_run.head_branch, 'v') &&
+      contains(github.event.workflow_run.head_branch, '.') &&
       github.event.workflow_run.head_commit.ref_type == 'tag'
     runs-on: ubuntu-latest
     strategy:
