@@ -12,11 +12,6 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-type Export struct {
-	ExportName string
-	FileName   string
-}
-
 type UnusedExportResult struct {
 	UnusedExports   []Export
 	NumberOfImports int
@@ -143,9 +138,6 @@ func findImportsInFile(filePath string) ([]string, error) {
 	return res, nil
 }
 
-const hasExportRegexPattern = `export (?:async )?(?:function|const)`
-const exportNameRegexPattern = `export (?:async )?(?:function|const) (\w+)`
-
 func buildExports(workTree *git.Worktree, fileSuffixFilter []string, exportPrefix string) ([]Export, error) {
 	res := []Export{}
 
@@ -173,7 +165,11 @@ func buildExports(workTree *git.Worktree, fileSuffixFilter []string, exportPrefi
 			}
 			funcName := regexp.MustCompile(exportNameRegexPattern).FindStringSubmatch(result.Content)
 			if len(funcName) > 0 {
-				res = append(res, Export{ExportName: funcName[1], FileName: result.FileName})
+				res = append(res, Export{
+					ExportName: funcName[1],
+					FileName:   result.FileName,
+					LineNumber: result.LineNumber,
+				})
 			}
 			break
 		}
