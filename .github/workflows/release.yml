@@ -1,21 +1,15 @@
 name: Build and Release
 
 on:
-  workflow_run:
-    workflows: ["test"]
-    types:
-      - completed
+  push:
+    tags:
+      - 'v*.*.*'  # triggers on version tags like v1.0.0
 
 permissions:
   contents: write  # required for creating GitHub releases
 
 jobs:
   build:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'v') &&
-      contains(github.event.workflow_run.head_branch, '.') &&
-      github.event.workflow_run.head_commit.ref_type == 'tag'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,7 +22,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'  # adjust if needed
+          go-version: '1.24'
+
+      - name: run tests
+        run: go test ./...
 
       - name: Build binary
         run: |
