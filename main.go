@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -9,12 +10,26 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+const version = "v2.0.0"
+
+func showVersion() {
+	fmt.Println(version)
+}
+
 func main() {
 
 	cmd := &cli.Command{
 		Name:  "unused-node-exports",
 		Usage: "find unused exports in a nodejs/typescript project",
 		Commands: []*cli.Command{
+			{
+				Name:  "version",
+				Usage: "show version",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					showVersion()
+					return nil
+				},
+			},
 			{
 				Name:  "scan",
 				Usage: "scan git directory find unused exports",

@@ -4,12 +4,21 @@ on:
   push:
     tags:
       - 'v*.*.*'  # triggers on version tags like v1.0.0
+on:
+  workflow_run:
+    workflows: ["test"]
+    types:
+      - completed
 
 permissions:
   contents: write  # required for creating GitHub releases
 
 jobs:
   build:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch =~ '^v[0-9]+\.[0-9]+\.[0-9]+$' &&
+      github.event.workflow_run.head_commit.ref_type == 'tag'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,6 +42,22 @@ jobs:
           fi
           binary="unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}${ext}"
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o "dist/$binary" .
+
+      - name: Check binary version matches tag
+        run: |
+          ext=""
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            ext=".exe"
+          fi
+          binary="unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}${ext}"
+          cd dist
+          BIN_VERSION=$(./"$binary" version
+          TAG_VERSION="${GITHUB_REF##*/}"
+          if [ "$BIN_VERSION" != "$TAG_VERSION" ]; then
+            echo "Binary version '$BIN_VERSION' does not match tag '$TAG_VERSION'"
+            exit 1
+          fi
+          cd ..
 
       - name: Compress binaries
         run: |
