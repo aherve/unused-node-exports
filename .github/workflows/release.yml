@@ -38,12 +38,9 @@ jobs:
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o "dist/$binary" .
 
       - name: Check binary version matches tag
+        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
         run: |
-          ext=""
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            ext=".exe"
-          fi
-          binary="unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}${ext}"
+          binary="unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}"
           cd dist
           BIN_VERSION=$(./"$binary" version)
           TAG_VERSION="${GITHUB_REF##*/}"
