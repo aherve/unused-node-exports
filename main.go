@@ -61,6 +61,12 @@ func main() {
 						Usage:   "If provided, only exports starting with this prefix will be considered. This is useful to find unused exports in a specific namespace.",
 						Value:   "",
 					},
+					&cli.BoolFlag{
+						Name:    "autofix",
+						Usage:   "If provided, the tool will automatically remove unused exports from the files.",
+						Value:   false,
+						Aliases: []string{"f"},
+					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					log.Printf("scanning path %s with extensions %+v", pathArg, cmd.StringSlice("file-extensions"))
@@ -69,12 +75,18 @@ func main() {
 						return err
 					}
 
+					autofix := cmd.Bool("autofix")
+
+					if autofix {
+						return unusedexports.Autofix(res.UnusedExports)
+					}
+
 					if outFile := cmd.String("output"); outFile != "" {
 						return CSVExport(res.UnusedExports, outFile)
 					}
 
 					for _, exp := range res.UnusedExports {
-						log.Printf("%s\t%s", exp.FileName, exp.ExportName)
+						fmt.Println(exp)
 					}
 
 					log.Printf("found %d unused exports amongst %d imports and %d exports", len(res.UnusedExports), res.NumberOfImports, res.NumberOfExports)
