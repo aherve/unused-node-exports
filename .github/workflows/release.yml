@@ -45,8 +45,9 @@ jobs:
           fi
           binary="unused-node-exports-${{ matrix.goos }}-${{ matrix.goarch }}${ext}"
           cd dist
-          BIN_VERSION=$(./"$binary" version
+          BIN_VERSION=$(./"$binary" version)
           TAG_VERSION="${GITHUB_REF##*/}"
+          echo " bin version: $BIN_VERSION, tag version: $TAG_VERSION"
           if [ "$BIN_VERSION" != "$TAG_VERSION" ]; then
             echo "Binary version '$BIN_VERSION' does not match tag '$TAG_VERSION'"
             exit 1
